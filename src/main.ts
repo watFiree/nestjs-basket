@@ -1,14 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
-import { AppModule } from './app.module';
-import { BasketIdInterceptor } from './basketId/basketId.interceptor';
+import { BasketModule } from './basket.module';
+
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe());
+  const app = await NestFactory.create(BasketModule);
+  app.useGlobalPipes(new ValidationPipe({ forbidUnknownValues: false }));
   app.use(cookieParser());
-  app.useGlobalInterceptors(new BasketIdInterceptor());
 
   await app.listen(3000);
 }

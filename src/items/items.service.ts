@@ -2,71 +2,85 @@ import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ItemDto } from './dto/item.dto';
-import { Item } from './items.entity';
-import { BasketIdProvider } from '../basketId/basketId.provider';
+import { ItemEntity } from './items.entity';
+import { BasketProvider } from '../core/basket.provider';
 
 @Injectable()
 export class ItemsService {
-  private items: ItemDto[];
-
   constructor(
-    @InjectRepository(Item)
-    private itemsRepository: Repository<Item>,
-    @Inject(BasketIdProvider)
-    private basketIdProvider: BasketIdProvider,
+    @InjectRepository(ItemEntity)
+    private itemsRepository: Repository<ItemEntity>,
+    @Inject(BasketProvider)
+    private basketProvider: BasketProvider,
   ) {
-    this.items = [];
   }
 
-  getBasketItems() {
-    return this.items;
-  }
+  async getBasketItems() {
+    try {
+      const currentBasket = await this.basketProvider.getCurrentEntity();
 
-  addItemToBasket(item: ItemDto) {
-    const isItemInBasket = this.items.find(
-      (basketItem) => basketItem.productId === item.productId,
-    );
-
-    console.log('token', this.basketIdProvider.get());
-
-    if (isItemInBasket) {
-      throw new HttpException(
-        'Item already added to basket',
-        HttpStatus.CONFLICT,
-      );
+      return await this.itemsRepository.find({ where: { basket: currentBasket } });
+    } catch (error) {
+      return error;
     }
+  }
 
-    const newItem: Item = {
-      ...item,
-      basketId: this.basketIdProvider.get(),
-    };
+  async addItemToBasket(item: ItemDto) {
+    try {
 
-    return this.itemsRepository.save(newItem);
+      const currentBasket = await this.basketProvider.getCurrentEntity([
+        'items',
+      ])
+      const isItemInBasket = await this.itemsRepository.findOneBy({ basket: currentBasket, productId: item.productId });
+      
+      if (isItemInBasket) {
+        throw new HttpException(
+          'Item already added to basket',
+          HttpStatus.CONFLICT,
+          );
+        }
+        
+        const newItem = new ItemEntity();
+        newItem.productId = item.productId;
+        newItem.count = item.count;
+        newItem.price = item.price;
+        newItem.currency = item.currency;
+        
+        currentBasket.items = [...(currentBasket.items || []), newItem]
+        newItem.basket = currentBasket;
+        
+        await this.itemsRepository.save(newItem);
+        
+        const basketRepository = await this.basketProvider.getBasketsRepository();
+        
+        await basketRepository.save(currentBasket);
+        
+        // return currentBasket.items;
+      } catch (error) {
+        console.log(error)
+        return error;
+      }
   }
 
   updateBasketItem(item: ItemDto) {
-    this.items = this.items.map((basketItem) =>
-      basketItem.productId === item.productId ? item : basketItem,
-    );
 
-    return this.items;
   }
 
   patchBasketItem(itemNewData: Partial<ItemDto>) {
-    this.items = this.items.map((basketItem) =>
-      basketItem.productId === itemNewData.productId
-        ? { ...basketItem, ...itemNewData }
-        : basketItem,
-    );
+    // this.items = this.items.map((basketItem) =>
+    //   basketItem.productId === itemNewData.productId
+    //     ? { ...basketItem, ...itemNewData }
+    //     : basketItem,
+    // );
 
-    return this.items;
+    // return this.items;
   }
 
   deleteBasketItem(productId: ProductId) {
-    this.items = this.items.filter(
-      (basketItem) => basketItem.productId !== productId,
-    );
+    // this.items = this.items.filter(
+    //   (basketItem) => basketItem.productId !== productId,
+    // );
 
-    return this.items;
+    // return this.items;
   }
 }

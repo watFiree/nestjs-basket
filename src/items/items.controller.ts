@@ -7,7 +7,6 @@ import {
   Put,
   Patch,
   Delete,
-  Req,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
 import { ItemDto } from './dto/item.dto';
@@ -22,8 +21,7 @@ export class ItemsController {
   }
 
   @Post()
-  addItemToBasket(@Req() request, @Body() item: ItemDto) {
-    console.log('cont', request.cookies);
+  addItemToBasket(@Body() item: ItemDto) {
     return this.itemsService.addItemToBasket(item);
   }
 

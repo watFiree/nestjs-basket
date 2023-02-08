@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ItemsService } from './items.service';
 import { ItemsController } from './items.controller';
-import { Item } from './items.entity';
-import { BasketIdProvider } from '../basketId/basketId.provider';
+import { ItemEntity } from './items.entity';
+import { CoreModule } from 'src/core/core.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Item])],
+  imports: [TypeOrmModule.forFeature([ItemEntity]), CoreModule],
   controllers: [ItemsController],
-  providers: [ItemsService, BasketIdProvider],
+  providers: [ItemsService],
 })
 export class ItemsModule {}

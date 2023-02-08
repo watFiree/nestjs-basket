@@ -1,12 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne, OneToMany } from 'typeorm';
+import { BasketEntity } from 'src/core/basket.entity';
 
-@Entity()
-export class Item {
+@Entity({ name: 'items' })
+export class ItemEntity {
   @PrimaryGeneratedColumn()
   basketProductId?: number;
 
-  @Column()
-  basketId: string;
+  @ManyToOne(() => BasketEntity, basket => basket.items)
+  basket: BasketEntity;
 
   @Column()
   productId: ProductId;

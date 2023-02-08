@@ -1,6 +1,7 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService, ConfigModule } from '@nestjs/config';
-import { Item } from '../items/items.entity';
+import { ItemEntity } from '../items/items.entity';
+import { BasketEntity } from '../core/basket.entity';
 import { EnvVariables } from './configuration';
 
 const DBModule = TypeOrmModule.forRootAsync({
@@ -13,7 +14,7 @@ const DBModule = TypeOrmModule.forRootAsync({
     username: configService.get('DB_USERNAME', { infer: true }),
     password: configService.get('DB_PASSWORD', { infer: true }),
     database: configService.get<any>('DB_NAME'),
-    entities: [Item],
+    entities: [ItemEntity, BasketEntity],
     ssl: true,
     synchronize: true,
     extra: {
